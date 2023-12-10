@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Medical Record form </title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .record-container {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .patient-info,
+    .medical-history,
+    .records-list {
+      flex: 1;
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin-right: 20px;
+      border-radius: 5px;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #2980b9;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      margin-bottom: 10px;
+    }
+
+    .record-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .edit-delete {
+      display: flex;
+      gap: 10px;
+    }
+
+    .edit,
+    .delete {
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 5px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .edit:hover,
+    .delete:hover {
+      background-color: #c0392b;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Advanced Medical Record</h1>
+
+  <div class="record-container">
+
+    <div class="patient-info">
+      <h2>Patient Information</h2>
+      <div class="form-group">
+        <label for="patientName">Name:</label>
+        <input type="text" id="patientName" placeholder="Enter patient's name">
+      </div>
+      <div class="form-group">
+        <label for="dob">Date of Birth:</label>
+        <input type="date" id="dob">
+      </div>
+      <div class="form-group">
+        <label for="gender">Gender:</label>
+        <select id="gender">
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <button onclick="savePatientInfo()">Save Patient Information</button>
+    </div>
+
+    <div class="medical-history">
+      <h2>Medical History</h2>
+      <div class="form-group">
+        <label for="diagnosis">Diagnosis:</label>
+        <textarea id="diagnosis" placeholder="Enter diagnosis"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="medications">Medications:</label>
+        <textarea id="medications" placeholder="Enter medications"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="allergies">Allergies:</label>
+        <textarea id="allergies" placeholder="Enter allergies"></textarea>
+      </div>
+      <button onclick="saveMedicalHistory()">Save Medical History</button>
+    </div>
+
+    <div class="records-list">
+      <h2>Previous Medical Records</h2>
+      <ul id="recordsList"></ul>
+    </div>
+
+  </div>
+
+  <script>
+    function savePatientInfo() {
+      const patientName = document.getElementById('patientName').value;
+      const dob = document.getElementById('dob').value;
+      const gender = document.getElementById('gender').value;
+
+      const patientInfo = { name: patientName, dob, gender };
+      localStorage.setItem('patientInfo', JSON.stringify(patientInfo));
+
+      displayRecordsList();
+    }
+
+    function saveMedicalHistory() {
+      const diagnosis = document.getElementById('diagnosis').value;
+      const medications = document.getElementById('medications').value;
+      const allergies = document.getElementById('allergies').value;
+
+      const medicalRecord = { diagnosis, medications, allergies };
+      let medicalRecords = JSON.parse(localStorage.getItem('medicalRecords')) || [];
+      medicalRecords.push(medicalRecord);
+      localStorage.setItem('medicalRecords', JSON.stringify(medicalRecords));
+
+      // Clear the input fields after saving
+      document.getElementById('diagnosis').value = '';
+      document.getElementById('medications').value = '';
+      document.getElementById('allergies').value = '';
+
+      displayRecordsList();
+    }
+
+    function displayRecordsList() {
+      const recordsList = document.getElementById('recordsList');
+      recordsList.innerHTML = '';
+
+      const medicalRecords = JSON.parse(localStorage.getItem('medicalRecords')) || [];
+
+      medicalRecords.forEach((record, index) => {
+        const listItem = document.createElement('li');
+        listItem.classList.add('record-item');
+
+        const editDeleteDiv = document.createElement('div');
+        editDeleteDiv.classList.add('edit-delete');
+
+        // Display medical record details
+        listItem.innerHTML = `
+          <div>
+            <strong>Record ${index + 1}</strong><br>
+            <strong>Diagnosis:</strong> ${record.diagnosis}<br>
+            <strong>Medications:</strong> ${record.medications}<br>
+            <strong>Allergies:</strong> ${record.allergies}
+          </div>
+        `;
+
+        // Edit button
+        const editButton = document.createElement('button');
+        editButton.classList.add('edit');
+        editButton.textContent = 'Edit';
+        editButton.onclick = () => editRecord(index);
+        editDeleteDiv.appendChild(editButton);
+
+        // Delete button
+        const deleteButton = document.createElement('button');
+        deleteButton.classList.add('delete');
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteRecord(index);
+        editDeleteDiv.appendChild(deleteButton);
+
+        listItem.appendChild(editDeleteDiv);
+        recordsList.appendChild(listItem);
+      });
+    }
+
+    function editRecord(index) {
+      const medicalRecords = JSON.parse(localStorage.getItem('medicalRecords')) || [];
+      const recordToEdit = medicalRecords[index];
+
+      // Populate the input fields with the existing record data
+      document.getElementById('diagnosis').value = recordToEdit.diagnosis;
+      document.getElementById('medications').value = recordToEdit.medications;
+      document.getElementById('allergies').value = recordToEdit.allergies;
+
+      // Remove the selected record from the list
+      medicalRecords.splice(index, 1);
+      localStorage.setItem('medicalRecords', JSON.stringify(medicalRecords));
+
+      // Update the records list
+      displayRecordsList();
+    }
+
+    function deleteRecord(index) {
+      const medicalRecords = JSON.parse(localStorage.getItem('medicalRecords')) || [];
+      medicalRecords.splice(index, 1);
+      localStorage.setItem('medicalRecords', JSON.stringify(medicalRecords));
+
+      // Update the records list
+      displayRecordsList();
+    }
+
+    // Display initial records list on page load
+    displayRecordsList();
+  </script>
+</body>
+</html>
